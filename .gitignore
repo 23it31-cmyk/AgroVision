@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+models/*.pt
+models/*.joblib
+models/*_metrics.json
+runs/
+.pytest_cache/
+.DS_Store
