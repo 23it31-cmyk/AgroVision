@@ -3,10 +3,10 @@ import logging
 from pathlib import Path
 import pandas as pd
 import streamlit as st
-from src.fertilizer_recommender import load_model, recommend, supported_categories
+from src.fertilizer_recommender import build_demo_model, load_model, recommend, supported_categories
 from src.pest_detector import PestDetector
 from src.preprocessing import RANGES
-from src.utils import MODEL_DIR, decode_image, model_version
+from src.utils import ROOT, MODEL_DIR, decode_image, model_version
 
 TITLE = "Adaptive AgroVision Framework for Precision Pest Detection and Intelligent Fertilizer Recommendation"
 LOGGER = logging.getLogger(__name__)
@@ -17,6 +17,12 @@ st.set_page_config(page_title="AgroVision | Precision Agriculture", page_icon="�
 def cached_fertilizer(path: str, version: tuple[int, int]):
     """Cache trusted model artifacts, invalidating on file replacement."""
     return load_model(Path(path))
+
+
+@st.cache_resource(show_spinner="Preparing synthetic demonstration model…")
+def cached_demo(path: str, version: tuple[int, int]):
+    """Build the optional demo once per server and source dataset version."""
+    return build_demo_model(Path(path))
 
 
 @st.cache_resource(show_spinner="Loading custom pest detector…")
@@ -99,10 +105,17 @@ def fertilizer() -> None:
     if not path.is_file():
         st.warning("Fertilizer model not found. Train the pipeline to enable recommendations.")
         st.code("python training/train_fertilizer.py --data data/fertilizer_sample.csv")
-        st.info("The bundled CSV is synthetic demonstration data, not experimental research data.")
-        return
+        st.info("For a hosted demonstration, use the bundled synthetic data to prepare a temporary model. No terminal or uploaded model is needed. This is not experimental research data.")
+        if st.button("Start synthetic demo", type="primary"):
+            st.session_state["fertilizer_demo_enabled"] = True
+        if not st.session_state.get("fertilizer_demo_enabled", False):
+            return
     try:
-        model = cached_fertilizer(str(path), model_version(path))
+        if path.is_file():
+            model = cached_fertilizer(str(path), model_version(path))
+        else:
+            demo_path = ROOT / "data/fertilizer_sample.csv"
+            model = cached_demo(str(demo_path), model_version(demo_path))
         categories = supported_categories(model)
     except Exception:
         LOGGER.exception("Fertilizer model loading failed")

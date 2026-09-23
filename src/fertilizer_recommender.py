@@ -2,9 +2,10 @@
 from pathlib import Path
 from typing import Any, Mapping
 import joblib
+import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import Pipeline
-from src.preprocessing import CATEGORICAL, FEATURES, build_preprocessor, input_frame
+from src.preprocessing import CATEGORICAL, FEATURES, build_preprocessor, input_frame, validate_frame, TARGET
 
 
 def build_pipeline(random_state: int = 42) -> Pipeline:
@@ -46,3 +47,15 @@ def recommend(model: Pipeline, values: Mapping[str, Any]) -> dict[str, Any]:
         probabilities = model.predict_proba(frame)[0]
         confidence = float(probabilities[list(model.classes_).index(label)])
     return {"fertilizer": label, "confidence": confidence}
+
+
+def build_demo_model(data_path: Path) -> Pipeline:
+    """Fit bundled synthetic data in memory for explicitly requested hosted demos."""
+    frame = validate_frame(pd.read_csv(data_path), training=True)
+    model = build_pipeline()
+    model.fit(frame[FEATURES], frame[TARGET])
+    model.agrovision_metadata_ = {
+        "synthetic_demo": True, "dataset": data_path.name,
+        "purpose": "Interactive software demonstration; no evaluation claims",
+    }
+    return model

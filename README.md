@@ -220,3 +220,11 @@ This is a software prototype for education and demonstration. Synthetic data and
 - [Ultralytics training documentation](https://docs.ultralytics.com/modes/train/)
 - [Streamlit file uploader](https://docs.streamlit.io/develop/api-reference/widgets/st.file_uploader)
 - [scikit-learn OneHotEncoder](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html)
+
+## Hosted demonstration without model files
+
+On Streamlit Community Cloud select repository `MOHAMMEDAASHIKK/AgroVision`, branch `main`, and entry point `app.py`. The Python backend runs within Streamlit; it does not connect to your laptop.
+
+Generated model files are excluded from Git. On **Fertilizer Recommendation**, click **Start synthetic demo** to fit the bundled synthetic CSV in the server's memory. The cached model persists for the server lifetime and can be rebuilt after a restart. No filesystem write or terminal command is required. The synthetic warning remains visible; this mode makes no evaluation or real-world accuracy claims. A supplied local fertilizer artifact always takes precedence, and a broken artifact is reported rather than silently replaced.
+
+Pest detection still requires trusted pest-trained weights at `models/pest_yolov8.pt`. No generic detector is substituted. If deployment fails before the page opens, inspect Community Cloud's application logs and share the error text.

@@ -25,3 +25,20 @@ def test_fertilizer_prediction(monkeypatch, tmp_path):
     assert not app.exception
     assert any('Recommended fertilizer:' in item.value for item in app.subheader)
     assert any('SYNTHETIC DEMO' in item.value for item in app.warning)
+
+
+def test_hosted_demo_without_artifact(monkeypatch, tmp_path):
+    """A clean GitHub deployment can predict after explicitly enabling demo mode."""
+    monkeypatch.setattr(utils, 'MODEL_DIR', tmp_path)
+    app = AppTest.from_file(str(utils.ROOT / 'app.py')).run()
+    app.sidebar.radio[0].set_value('Fertilizer Recommendation').run()
+    assert not app.exception
+    assert not app.number_input
+    next(b for b in app.button if b.label == 'Start synthetic demo').click().run()
+    assert not app.exception
+    assert len(app.number_input) == 7
+    next(b for b in app.button if b.label == 'Recommend fertilizer').click().run()
+    assert not app.exception
+    assert any('Recommended fertilizer:' in item.value for item in app.subheader)
+    assert any('SYNTHETIC DEMO' in item.value for item in app.warning)
+    assert not list(tmp_path.glob('*.joblib'))
